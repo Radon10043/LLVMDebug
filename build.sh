@@ -1,13 +1,24 @@
 #!/bin/bash
 
 USERID=$(id -u)
+BUILD_MODE=$1
 
 if [ $USERID -ne 0 ]; then
   echo "You need use this script with \"sudo\"."
   exit 1
 fi
 
-echo "I'm going to build clang & LLVM in $HOME."
+if [ -z $BUILD_MODE ]; then
+  echo "You need specify build mode of LLVM and clang, e.g. "
+  echo "\"sudo ./build.sh Debug\" or \"sudo ./build.sh Release\""
+  exit 1
+elif [[ $BUILD_MODE != "Debug" && $BUILD_MODE != "Release" ]]; then
+  echo "Invalid arg: $BUILD_MODE."
+  echo "Valid arg: Debug, Release."
+  exit 1
+fi
+
+echo "I'm going to build clang & LLVM in $BUILD_MODE mode."
 echo "please ensure there is no \"build\" folder in $HOME."
 echo "You can stop this script by press ctrl-c any time."
 sleep 5s
@@ -63,7 +74,7 @@ mkdir -p build-llvm/llvm; cd build-llvm/llvm
 cmake -G "Ninja" \
       -DLLVM_PARALLEL_LINK_JOBS=1 \
       -DLIBCXX_ENABLE_SHARED=OFF -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=ON \
-      -DCMAKE_BUILD_TYPE=Debug -DLLVM_TARGETS_TO_BUILD="X86" \
+      -DCMAKE_BUILD_TYPE=$BUILD_MODE -DLLVM_TARGETS_TO_BUILD="X86" \
       -DLLVM_BINUTILS_INCDIR=/usr/include ~/build/llvm_tools/llvm-11.0.0.src
 ninja; ninja install
 
@@ -74,7 +85,7 @@ cmake -G "Ninja" \
       -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
       -DLLVM_USE_SANITIZER=Memory -DCMAKE_INSTALL_PREFIX=/usr/msan/ \
       -DLIBCXX_ENABLE_SHARED=OFF -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=ON \
-      -DCMAKE_BUILD_TYPE=Debug -DLLVM_TARGETS_TO_BUILD="X86" \
+      -DCMAKE_BUILD_TYPE=$BUILD_MODE -DLLVM_TARGETS_TO_BUILD="X86" \
        ~/build/llvm_tools/llvm-11.0.0.src
 ninja cxx; ninja install-cxx
 
