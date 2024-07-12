@@ -1,67 +1,5 @@
 #!/bin/bash
 
-#     Version Reference
-# LLVM_VERSION  CMAKE_VERSION
-#   11.0.0        3.13.4
-#   13.0.0        3.21.3
-
-USERID=$(id -u)
-BUILD_MODE=$1
-UBUNTU_VERSION=$(lsb_release -sr | cut -d. -f1) # Useless?
-LLVM_VERSION=13.0.0
-CMAKE_VERSION=3.21.3
-PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d. -f-2)
-
-if [ $USERID -ne 0 ]; then
-  echo "You need use this script with \"sudo\"."
-  exit 1
-fi
-
-if [ -z $BUILD_MODE ]; then
-  echo "You need specify build mode of LLVM and clang, e.g. "
-  echo "\"sudo ./build.sh Debug\" or \"sudo ./build.sh Release\""
-  exit 1
-elif [[ $BUILD_MODE != "Debug" && $BUILD_MODE != "Release" ]]; then
-  echo "Invalid arg: $BUILD_MODE."
-  echo "Valid arg: Debug, Release."
-  exit 1
-fi
-
-echo "Machine Information:"
-echo "Ubuntu version : $UBUNTU_VERSION"
-echo "Build mode     : $BUILD_MODE"
-echo "Python version : $PYTHON_VERSION"
-
-echo ""
-echo "Installation:"
-echo "LLVM version   : $LLVM_VERSION"
-echo "CMake version  : $CMAKE_VERSION"
-
-echo ""
-echo "I'm going to build clang & LLVM in $BUILD_MODE mode."
-echo "please ensure there is no \"build\" folder in $PWD."
-echo "You can stop this script by press ctrl-c any time."
-for i in {5..1}; do
-  echo -n -e "\rStart in $i seconds."
-  sleep 1
-done
-echo ""
-
-# 参考AFLGo的脚本来build clang & LLVM
-LLVM_DEP_PACKAGES="build-essential make ninja-build git binutils-gold binutils-dev curl wget libssl-dev python$PYTHON_VERSION-distutils"
-apt-get install -y $LLVM_DEP_PACKAGES
-
-# 如果Ubuntu版本小于等于20, 则安装gcc-10和g++-10
-if [ $UBUNTU_VERSION -le 20 ]; then
-  install_gcc10
-fi
-
-# 安装cmake
-install_cmake
-
-# 安装LLVM
-install_LLVM
-
 ###################################################
 #################### Functions ####################
 ###################################################
@@ -144,3 +82,69 @@ install_LLVM() {
   cp /usr/local/lib/libLTO.so /usr/lib/bfd-plugins
   cp /usr/local/lib/LLVMgold.so /usr/lib/bfd-plugins
 }
+
+###################################################
+################## Installation ###################
+###################################################
+
+#     Version Reference
+# LLVM_VERSION  CMAKE_VERSION
+#   11.0.0        3.13.4
+#   13.0.0        3.21.3
+
+USERID=$(id -u)
+BUILD_MODE=$1
+UBUNTU_VERSION=$(lsb_release -sr | cut -d. -f1) # Useless?
+LLVM_VERSION=13.0.0
+CMAKE_VERSION=3.21.3
+PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d. -f-2)
+
+if [ $USERID -ne 0 ]; then
+  echo "You need use this script with \"sudo\"."
+  exit 1
+fi
+
+if [ -z $BUILD_MODE ]; then
+  echo "You need specify build mode of LLVM and clang, e.g. "
+  echo "\"sudo ./build.sh Debug\" or \"sudo ./build.sh Release\""
+  exit 1
+elif [[ $BUILD_MODE != "Debug" && $BUILD_MODE != "Release" ]]; then
+  echo "Invalid arg: $BUILD_MODE."
+  echo "Valid arg: Debug, Release."
+  exit 1
+fi
+
+echo "Machine Information:"
+echo "Ubuntu version : $UBUNTU_VERSION"
+echo "Build mode     : $BUILD_MODE"
+echo "Python version : $PYTHON_VERSION"
+
+echo ""
+echo "Installation:"
+echo "LLVM version   : $LLVM_VERSION"
+echo "CMake version  : $CMAKE_VERSION"
+
+echo ""
+echo "I'm going to build clang & LLVM in $BUILD_MODE mode."
+echo "please ensure there is no \"build\" folder in $PWD."
+echo "You can stop this script by press ctrl-c any time."
+for i in {5..1}; do
+  echo -n -e "\rStart in $i seconds."
+  sleep 1
+done
+echo ""
+
+# 参考AFLGo的脚本来build clang & LLVM
+LLVM_DEP_PACKAGES="build-essential make ninja-build git binutils-gold binutils-dev curl wget libssl-dev python$PYTHON_VERSION-distutils"
+apt-get install -y $LLVM_DEP_PACKAGES
+
+# 如果Ubuntu版本小于等于20, 则安装gcc-10和g++-10
+if [ $UBUNTU_VERSION -le 20 ]; then
+  install_gcc10
+fi
+
+# 安装cmake
+install_cmake
+
+# 安装LLVM
+install_LLVM
